@@ -1,0 +1,30 @@
+name: Update Local Files and Restart Nginx
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: contect, pull, restart
+      uses: appleboy/ssh-action@master
+      with:
+        host: ec2-54-151-25-5.us-west-1.compute.amazonaws.com
+        username: ubuntu
+        key: ${{ secrets.SERVER_PASSWORD }}
+        port: 22
+        script: |
+          source Django-deployment-practice/env/bin/activate
+          cd Django-deployment-practice/SkelWeb
+          git checkout -- db.sqlite3
+          git pull
+          pip install --upgrade -r requirements.txt
+          # python manage.py collectstatic --no-input
+          sudo supervisorctl reload
+          sudo service nginx restart
